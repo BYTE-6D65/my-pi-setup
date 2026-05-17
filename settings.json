@@ -3,5 +3,11 @@
   "defaultProvider": "zai",
   "defaultModel": "glm-5.1",
   "defaultThinkingLevel": "high",
-  "hideThinkingBlock": false
+  "hideThinkingBlock": false,
+  "npmCommand": [
+    "bun"
+  ],
+  "packages": [
+    "npm:pi-codex-goal"
+  ]
 }
