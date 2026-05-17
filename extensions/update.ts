@@ -1,8 +1,14 @@
 import type { ExtensionAPI, ExtensionCommandContext } from "@mariozechner/pi-coding-agent";
-import { access, realpath } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { access, readFile, realpath, writeFile } from "node:fs/promises";
+import { dirname, resolve, join } from "node:path";
+import { homedir } from "node:os";
 
 const PACKAGE_NAME = "@mariozechner/pi-coding-agent";
+const LOCAL_PI_PACKAGES = [
+  "@mariozechner/pi-ai",
+  "@mariozechner/pi-coding-agent",
+  "@mariozechner/pi-tui",
+];
 const TRANSIENT_PATTERNS = [
   /eai_again/i,
   /etimedout/i,
@@ -124,6 +130,68 @@ async function updatePi(pi: ExtensionAPI, ctx: ExtensionCommandContext) {
   const changed = before !== after && before !== "unknown" && after !== "unknown";
   const summary = changed ? `Pi updated: ${before} → ${after}` : `Pi is up to date (${after}).`;
   ctx.ui.notify(`${summary}${result.attempts > 1 ? ` Retried ${result.attempts - 1} transient failure(s).` : ""}`, "info");
+
+  if (changed && after !== "unknown") {
+    await updateLocalPackages(pi, ctx, after);
+  }
+}
+
+async function updateLocalPackages(pi: ExtensionAPI, ctx: ExtensionCommandContext, targetVersion: string) {
+  const agentDir = process.env.PI_AGENT_DIR ?? join(homedir(), ".pi", "agent");
+  const pkgPath = join(agentDir, "package.json");
+
+  let pkgJson: Record<string, unknown>;
+  try {
+    const raw = await readFile(pkgPath, "utf8");
+    pkgJson = JSON.parse(raw);
+  } catch {
+    ctx.ui.notify(`Could not read agent package.json at ${pkgPath}, skipping local update.`, "warning");
+    return;
+  }
+
+  const deps = pkgJson.dependencies as Record<string, string> | undefined;
+  if (!deps) return;
+
+  let anyUpdated = false;
+  for (const name of LOCAL_PI_PACKAGES) {
+    if (deps[name] && deps[name] !== `^${targetVersion}`) {
+      deps[name] = `^${targetVersion}`;
+      anyUpdated = true;
+    }
+  }
+
+  if (!anyUpdated) {
+    ctx.ui.notify("Local agent packages already match.", "info");
+    return;
+  }
+
+  try {
+    await writeFile(pkgPath, JSON.stringify(pkgJson, null, 2) + "\n");
+  } catch {
+    ctx.ui.notify(`Could not write agent package.json, skipping bun install.`, "warning");
+    return;
+  }
+
+  ctx.ui.notify(`Installing local agent packages at ${targetVersion}...`, "info");
+  const installResult = await pi.exec("bun", ["install"], { cwd: agentDir, timeout: 60_000 });
+  if (installResult.code === 0) {
+    ctx.ui.notify(`Local agent packages updated to ${targetVersion}.`, "info");
+  } else {
+    // Binary version may be ahead of npm — fall back to latest published
+    const output = [installResult.stdout, installResult.stderr].filter(Boolean).join("\n").trim();
+    ctx.ui.notify(`Agent packages not yet published at ${targetVersion}, falling back to latest...`, "warning");
+    for (const name of LOCAL_PI_PACKAGES) {
+      if (deps[name]) deps[name] = "latest";
+    }
+    try { await writeFile(pkgPath, JSON.stringify(pkgJson, null, 2) + "\n"); } catch { /* best effort */ }
+    const fallback = await pi.exec("bun", ["install"], { cwd: agentDir, timeout: 60_000 });
+    if (fallback.code === 0) {
+      ctx.ui.notify("Local agent packages updated to latest published versions.", "info");
+    } else {
+      const fbOutput = [fallback.stdout, fallback.stderr].filter(Boolean).join("\n").trim();
+      ctx.ui.notify(`Local agent install failed: ${fbOutput || output || "unknown error"}`, "error");
+    }
+  }
 }
 
 export default function (pi: ExtensionAPI) {
