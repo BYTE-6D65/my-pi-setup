@@ -1,9 +1,9 @@
 {
-  "lastChangelogVersion": "0.74.0",
+  "lastChangelogVersion": "0.74.1",
   "defaultProvider": "zai",
   "defaultModel": "glm-5.1",
   "defaultThinkingLevel": "high",
-  "hideThinkingBlock": false,
+  "hideThinkingBlock": true,
   "npmCommand": [
     "bun"
   ],

@@ -18,9 +18,14 @@ When working in typescript:
 - `as any` should be an absolute last resort. always use real type safety. lean on type inference instead of manually writing new types over and over again
 - avoid running `dev` or `build` commands. if you really need to, ask first
 
-When working in svelte(kit):
+When working in react:
 
-- use modern svelte practices, reference the svelte best practicies skill when writing .svelte file code
+- prefer modern react patterns (hooks, function components)
+- use the react best practices skill when writing react code
+
+Context resources:
+
+- `~/Work/Scratch/btca/` — repos cloned via `/btca` for exploring unfamiliar codebases. Use these when the user asks about a library/technology that's been cloned here
 
 In general:
 

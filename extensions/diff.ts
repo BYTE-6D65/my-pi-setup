@@ -119,7 +119,8 @@ export default function (pi: ExtensionAPI) {
       const file = files[selectedIndex];
       if (!file) return;
 
-      const result = await pi.exec("zed", ["-e", file], { cwd: ctx.cwd, timeout: 5000 });
+      const zedBin = process.platform === "linux" ? "zeditor" : "zed";
+      const result = await pi.exec(zedBin, ["-e", file], { cwd: ctx.cwd, timeout: 5000 });
       if (result.code === 0) {
         ctx.ui.notify(`Opened ${selected} in Zed`, "info");
       } else {
