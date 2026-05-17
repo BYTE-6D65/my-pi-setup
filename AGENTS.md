@@ -1,3 +1,15 @@
+Package and extension management:
+
+- **use `bun` for everything** — never use `npm`, `yarn`, `pnpm`, or any other package manager
+- install pi extensions with `pi install <source>` — never `bun add` or `npm install` directly, pi needs to track packages in settings.json
+- if `pi install` fails, fix the root cause (permissions, `npmCommand` config, etc.) rather than working around it with a different package manager
+- the `npmCommand` in settings.json must always be `["bun"]` — if it gets changed back to npm or removed, that's a bug
+- never manually edit `package.json` to add/remove packages — use the appropriate install command (`pi install`, `bun add`, etc.)
+- never run `npm install -g` — use `bun add -g` or `pi install` instead
+- when writing extensions that need dependencies, add them to `~/.pi/agent/package.json` via `bun add` in the agent directory
+- disabled extensions get renamed to `.ts.disabled` (not deleted) so they can be re-enabled easily
+- before pushing to GH, verify `pi list` shows all expected packages and settings.json has the correct `npmCommand` and `packages` entries
+
 When working in typescript:
 
 - when adding a package to a project add it with an install command, instead of manually editing the package json
