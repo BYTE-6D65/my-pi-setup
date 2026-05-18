@@ -31,6 +31,7 @@ Forked from [davis7dotsh/my-pi-setup](https://github.com/davis7dotsh/my-pi-setup
 | `/zsh-user-bash` | `zsh-user-bash.ts` | Run user bash commands through zsh with proper shell config |
 | `ephemeral` | `ephemeral/` | Ephemeral file management extension |
 | `pi-mcp` | `pi-mcp/` | MCP server integration |
+| — | `percent-compact.ts` | Auto-compact context at 85% usage (model-agnostic) |
 
 **Disabled extensions** are renamed to `.ts.disabled` (e.g. `firecrawl-search.ts.disabled`).
 

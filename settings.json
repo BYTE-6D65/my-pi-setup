@@ -7,6 +7,11 @@
   "npmCommand": [
     "bun"
   ],
+  "compaction": {
+    "reserveTokens": 16384,
+    "keepRecentTokens": 20000
+  },
+  "extensions": ["extensions/percent-compact.ts"],
   "packages": [
     "npm:pi-codex-goal"
   ]
